@@ -29,7 +29,21 @@ public_users.post("/register", (req, res) => {
 
 // Get the book list available in the shop
 public_users.get("/", function (req, res) {
-	return res.status(200).send(books);
+	new Promise((resolve, reject) => {
+		try {
+			const books = require("./booksdb.js");
+			resolve(books);
+		} catch (error) {
+			reject(error);
+		}
+	})
+		.then((booksData) => {
+			return res.status(200).send(booksData);
+		})
+		.catch((error) => {
+			console.error("Error loading books:", error);
+			return res.status(500).send("Error loading books");
+		});
 });
 
 // Get book details based on ISBN
@@ -37,8 +51,22 @@ public_users.get("/isbn/:isbn", function (req, res) {
 	const isbn = req.params.isbn;
 
 	if (isbn) {
-		const book = books[isbn];
-		return res.status(200).json(book);
+		new Promise((resolve, reject) => {
+			try {
+				const books = require("./booksdb.js");
+				resolve(books);
+			} catch (error) {
+				reject(error);
+			}
+		})
+			.then((booksData) => {
+				const book = booksData[isbn];
+				return res.status(200).send(book);
+			})
+			.catch((error) => {
+				console.error("Error loading book:", error);
+				return res.status(500).send("Error loading book");
+			});
 	}
 });
 
@@ -47,13 +75,27 @@ public_users.get("/author/:author", function (req, res) {
 	const author = req.params.author;
 	const authorBooks = [];
 
-	for (let book of Object.values(books)) {
-		if (book.author === author) {
-			authorBooks.push(book);
+	new Promise((resolve, reject) => {
+		try {
+			const books = require("./booksdb.js");
+			resolve(books);
+		} catch (error) {
+			reject(error);
 		}
-	}
+	})
+		.then((booksData) => {
+			for (let book of Object.values(booksData)) {
+				if (book.author === author) {
+					authorBooks.push(book);
+				}
+			}
 
-	return res.status(200).json(authorBooks);
+			return res.status(200).send(authorBooks);
+		})
+		.catch((error) => {
+			console.error("Error loading books:", error);
+			return res.status(500).send("Error loading books");
+		});
 });
 
 // Get all books based on title
@@ -61,13 +103,27 @@ public_users.get("/title/:title", function (req, res) {
 	const title = req.params.title;
 	let selectedBook;
 
-	for (let book of Object.values(books)) {
-		if (book.title === title) {
-			selectedBook = book;
+	new Promise((resolve, reject) => {
+		try {
+			const books = require("./booksdb.js");
+			resolve(books);
+		} catch (error) {
+			reject(error);
 		}
-	}
+	})
+		.then((booksData) => {
+			for (let book of Object.values(booksData)) {
+				if (book.title === title) {
+					selectedBook = book;
+				}
+			}
 
-	return res.status(200).json(selectedBook);
+			return res.status(200).json(selectedBook);
+		})
+		.catch((error) => {
+			console.error("Error loading books:", error);
+			return res.status(500).send("Error loading books");
+		});
 });
 
 //  Get book review
